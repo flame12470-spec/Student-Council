@@ -188,6 +188,12 @@ const cfg=(k,d='')=>D.cfg[k]||d;
 const OLD_NAMES=['พรรคคอนเน็กซ์','Connext Party'];
 const NAME_TH='พรรคคอนนิวเตอร์',NAME_EN='Connor Newte';
 const HEX=/^#[0-9a-f]{6}$/i;
+/* พื้นหลังแบบสีหรือรูป -> สไตล์ CSS */
+function bgCss(v){v=String(v||'').trim();if(!v)return '';
+  if(HEX.test(v))return `background:${v}`;
+  const u=encodeURI(fixUrl(v)).replace(/[()'"]/g,c=>'%'+c.charCodeAt(0).toString(16));
+  return `background:#e9edf6 center/cover no-repeat url(${u})`;}
+const bgAttr=v=>{const b=bgCss(v);return b?` style="${e(b)}"`:'';};
 function applyTheme(){
   const r=document.documentElement.style;
   [['theme_navy','--navy'],['theme_blue','--blue'],['theme_sky','--sky']].forEach(([k,v])=>{const c=cfg(k);if(HEX.test(c))r.setProperty(v,c);else r.removeProperty(v);});
@@ -302,7 +308,7 @@ function popup(){
 
 /* ---------- pages ---------- */
 function policyCard(p){return `<button class="card" data-pol="${p.id}"><span class="badge ${p.status==='done'?'done':'doing'}">${p.status==='done'?'ทำแล้ว':'กำลังดำเนินการ'}</span>${p.image_url?img(p.image_url,p.title):`<div class="ph">${e(p.title)}</div>`}</button>`;}
-function memCard(m){return `<div class="mem">${img(m.image_url,m.nickname)}<div class="ov"><b>${e(m.nickname)}</b>${m.role?`<em>${e(m.role)}</em>`:''}<small>${e([m.class_name,m.full_name].filter(Boolean).join(' | '))}</small></div></div>`;}
+function memCard(m){return `<div class="mem"${bgAttr(m.bg||cfg('member_card_bg'))}>${img(m.image_url,m.nickname)}<div class="ov"><b>${e(m.nickname)}</b>${m.role?`<em>${e(m.role)}</em>`:''}<small>${e([m.class_name,m.full_name].filter(Boolean).join(' | '))}</small></div></div>`;}
 function bindCards(){
   document.querySelectorAll('[data-pol]').forEach(b=>b.onclick=()=>openPolicy(b.dataset.pol));
   document.querySelectorAll('[data-news]').forEach(b=>b.onclick=()=>openNews(b.dataset.news));
@@ -379,7 +385,7 @@ function pHome(){
   <section><div class="wrap center"><h2 class="t">${e(cfg('vision_title','วิสัยทัศน์'))}</h2><p class="lead">${e(cfg('vision'))}</p><a class="btn" href="#/history">ประวัติแกนนำ</a></div></section>
   <section style="padding-top:20px"><div class="wrap"><h2 class="t">นโยบายพรรค</h2><div class="grid3">${pol.map(policyCard).join('')||'<div class="empty">ยังไม่มีนโยบาย</div>'}</div><div class="center" style="margin-top:40px"><a class="btn" href="#/policies">ดูนโยบายทั้งหมด</a></div></div></section>
   ${D.why.length?`<section class="alt"><div class="wrap"><h2 class="t">${e(cfg('why_title','ทำไมต้องคอนนิวเตอร์'))}</h2><div class="grid3">${D.why.map(w=>`<div class="card why" style="cursor:default">${w.image_url?img(w.image_url,w.title):`<div class="ph"></div>`}<div class="ov"><h3>${e(w.title)}</h3><p>${e(w.description)}</p></div></div>`).join('')}</div></div></section>`:''}
-  <section><div class="wrap"><h2 class="t">สมาชิกพรรค</h2></div><div class="rows">${marquee(r1,false)}${marquee(r2,true)}</div></section>
+  <section${bgAttr(cfg('member_page_bg'))}><div class="wrap"><h2 class="t">สมาชิกพรรค</h2></div><div class="rows">${marquee(r1,false)}${marquee(r2,true)}</div></section>
   <section class="cd"><div class="wrap"><h2>${e(cfg('cd_title','นับถอยหลังวันเลือกตั้ง'))}</h2><p id="cdmsg">${e(cfg('countdown')?cfg('cd_sub'):'ยังไม่ได้ตั้งวันเลือกตั้ง')}</p><div class="cdw" id="cdw"></div></div></section>`;
   bindCards();heroSlider();countdown();
 }
@@ -396,7 +402,7 @@ function pHistory(){
 function pMembers(){
   const g={};D.members.forEach(m=>{const k=m.class_name||'ระดับชั้นอื่น';(g[k]=g[k]||[]).push(m);});
   $('app').innerHTML=hero(`${D.members.length} คนทำงาน`,cfg('mem_sub','มากความสามารถ เพรียบพร้อมประสบการณ์'))+
-  `<section><div class="wrap">${Object.keys(g).map(k=>`<div class="cls-b"><h2 class="cls">${e(k)}</h2><div class="mgrid">${g[k].map(memCard).join('')}</div></div>`).join('')||'<div class="empty">ยังไม่มีสมาชิก</div>'}</div></section>`;
+  `<section${bgAttr(cfg('member_page_bg'))}><div class="wrap">${Object.keys(g).map(k=>`<div class="cls-b"><h2 class="cls">${e(k)}</h2><div class="mgrid">${g[k].map(memCard).join('')}</div></div>`).join('')||'<div class="empty">ยังไม่มีสมาชิก</div>'}</div></section>`;
 }
 function pPolicies(){
   $('app').innerHTML=hero(cfg('pol_title','นโยบายทำได้จริง'),cfg('pol_sub','ผ่านการปรึกษาฝ่ายบริหารและคุณครูผู้เกี่ยวข้อง'))+
