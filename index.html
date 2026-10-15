@@ -17,8 +17,8 @@ button{font:inherit;cursor:pointer}
 :focus-visible{outline:3px solid var(--sky);outline-offset:2px}
 [hidden]{display:none!important}
 /* nav */
-header{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.78);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);border:0;box-shadow:none}
-header::after{content:"";position:absolute;top:100%;left:0;right:0;height:34px;pointer-events:none;background:linear-gradient(180deg,rgba(255,255,255,.72) 0%,rgba(77,179,245,.24) 48%,rgba(77,179,245,0) 100%)}
+header{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.9);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
+header::after{content:"";position:absolute;left:0;right:0;top:100%;height:clamp(14px,2.5vw,26px);background:linear-gradient(180deg,rgba(255,255,255,.9),rgba(255,255,255,0));pointer-events:none}
 .nav{max-width:1240px;margin:auto;padding:10px clamp(12px,3vw,24px);display:flex;align-items:center;justify-content:space-between;gap:16px}
 .brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:clamp(17px,2.4vw,22px);color:var(--navy);text-decoration:none;white-space:nowrap}
 .brand img{height:clamp(30px,5vw,42px);width:auto}
@@ -29,6 +29,7 @@ nav a:hover{color:var(--navy);background:color-mix(in srgb,var(--blue) 9%,#fff)}
 nav a.on{color:var(--navy);font-weight:700}
 /* hero + coverflow */
 .hero{--fade:clamp(46px,8vw,100px);padding-bottom:var(--fade);position:relative;display:flex;flex-direction:column;min-height:calc(100vh - 68px);background:linear-gradient(180deg,var(--navy) 0%,var(--blue) 45%,var(--sky) 100%);color:#fff;text-align:center;overflow:hidden}
+.hero::after{content:"";position:absolute;left:0;right:0;bottom:0;height:var(--fade);background:linear-gradient(180deg,color-mix(in srgb,var(--sky),transparent 100%) 0%,rgba(255,255,255,.7) 60%,#fff 100%);z-index:31;pointer-events:none}
 @supports(height:1dvh){.hero{min-height:calc(100dvh - 68px)}}
 .hero h1{margin:0;padding:clamp(18px,4vw,30px) 12px 0;font-weight:700;line-height:1.05;position:relative;z-index:1}
 .hero h1 small{display:block;font-size:clamp(26px,6vw,80px)}
@@ -41,7 +42,7 @@ nav a.on{color:var(--navy);font-weight:700}
 .sl{position:absolute;top:0;bottom:0;left:50%;transform-origin:50% 100%;transform:translateX(calc(-50% + var(--o,0)*var(--gap))) scale(calc(1 - var(--a,0)*.17));filter:brightness(calc(1 - var(--a,0)*.14));transition:transform .6s cubic-bezier(.25,.8,.25,1),opacity .6s,filter .6s;cursor:pointer}
 .sl.c{cursor:default}
 .sl img{height:100%;width:auto;max-width:none;object-fit:contain;object-position:bottom;pointer-events:none;-webkit-user-drag:none}
-.cap{position:absolute;left:0;right:0;bottom:var(--fade);z-index:30;padding:clamp(50px,10vw,90px) 16px 14px;background:transparent;pointer-events:none}
+.cap{position:absolute;left:0;right:0;bottom:var(--fade);z-index:30;padding:clamp(50px,10vw,90px) 16px 14px;background:linear-gradient(180deg,transparent,color-mix(in srgb,var(--sky) 94%,transparent) 62%);pointer-events:none}
 .cap b{display:block;font-size:clamp(22px,4.6vw,48px);line-height:1.1}
 .cap span{display:block;font-size:clamp(14px,2.2vw,24px);opacity:.95}
 .cap a{display:inline-block;margin-top:6px;font-size:clamp(13px,1.8vw,16px);border-bottom:2px solid #fff;text-decoration:none;font-weight:600;pointer-events:auto}
@@ -99,6 +100,7 @@ h2.t{margin:0 0 clamp(24px,5vw,44px);text-align:center;font-size:clamp(23px,4vw,
 .dig.flip{animation:flip .45s ease}
 @keyframes flip{0%{transform:rotateX(-80deg);opacity:.3}100%{transform:none;opacity:1}}
 .cd{position:relative}
+.cd::before{content:"";position:absolute;left:0;right:0;top:0;height:clamp(28px,5vw,60px);background:linear-gradient(180deg,#fff,rgba(255,255,255,0));pointer-events:none}
 /* sub pages */
 .phero{position:relative;padding:clamp(48px,9vw,90px) 12px;text-align:center;color:#fff;background:var(--navy) center/cover}
 .phero::before{content:"";position:absolute;inset:0;background:color-mix(in srgb,var(--blue) 72%,transparent)}
@@ -147,8 +149,6 @@ h2.t{margin:0 0 clamp(24px,5vw,44px);text-align:center;font-size:clamp(23px,4vw,
 .annc h3{font-size:clamp(20px,5vw,34px);margin:20px 0 12px;line-height:1.3}
 .annc p{white-space:pre-line;font-size:clamp(14px,2.4vw,17px);margin:0 0 16px}
 footer{position:relative;background:var(--navy);color:#fff;padding:clamp(20px,4vw,30px) 0}
-/* ลบแถบไล่สีเหนือส่วนท้าย โดยคงหัวข้อ “ติดต่อเรา” ไว้ */
-footer::before,footer::after{content:none!important;display:none!important;background:none!important}
 footer .wrap{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap}
 footer .l{display:flex;gap:10px;align-items:center}
 footer img.fl{height:clamp(32px,6vw,46px);width:auto;filter:brightness(0) invert(1)}
