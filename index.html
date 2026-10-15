@@ -251,15 +251,36 @@ const ROUTES=[['/','หน้าหลัก'],['/about','เกี่ยวก�
 let timers=[];
 const clearTimers=()=>{timers.forEach(t=>typeof t==='function'?t():clearInterval(t));timers=[];};
 
-async function load(){
+async function fetchAll(){
   const q=(t,o)=>db.from(t).select('*').order(o,{ascending:true,nullsFirst:false});
   const [a,b,c,d,f,g,h]=await Promise.all([
     db.from('cp_settings').select('*'),q('cp_slides','sort'),q('cp_policies','sort'),q('cp_members','sort'),q('cp_leaders','sort'),
     db.from('cp_news').select('*').order('published_at',{ascending:false}),q('cp_why','sort')]);
   const err=a.error||b.error||c.error||d.error||f.error||g.error||h.error;
-  if(err){$('app').innerHTML=`<section><div class="wrap"><div class="empty">โหลดข้อมูลไม่สำเร็จ: ${e(err.message)}<br>ตรวจสอบว่ารัน setup.sql แล้ว</div></div></section>`;return false;}
-  D.cfg=Object.fromEntries((a.data||[]).map(r=>[r.key,r.value]));
-  D.slides=b.data;D.policies=c.data;D.members=d.data;D.leaders=f.data;D.news=g.data;D.why=h.data;return true;
+  if(err)return {err};
+  return {sig:JSON.stringify([a.data,b.data,c.data,d.data,f.data,g.data,h.data]),a:a.data,b:b.data,c:c.data,d:d.data,f:f.data,g:g.data,h:h.data};
+}
+let sig='';
+function apply(r){
+  D.cfg=Object.fromEntries((r.a||[]).map(x=>[x.key,x.value]));
+  D.slides=r.b;D.policies=r.c;D.members=r.d;D.leaders=r.f;D.news=r.g;D.why=r.h;sig=r.sig;
+}
+async function load(){
+  const r=await fetchAll();
+  if(r.err){$('app').innerHTML=`<section><div class="wrap"><div class="empty">โหลดข้อมูลไม่สำเร็จ: ${e(r.err.message)}<br>ตรวจสอบว่ารัน setup.sql แล้ว</div></div></section>`;return false;}
+  apply(r);return true;
+}
+/* ดึงข้อมูลใหม่ทุก 2 วินาที อัปเดตหน้าเฉพาะเมื่อข้อมูลเปลี่ยน (ไม่ทำตอนเปิดป๊อบอัปหรือซ่อนแท็บ) */
+let busy=false;
+async function poll(){
+  if(busy||document.hidden||$('modal').firstChild)return;
+  busy=true;
+  try{
+    const r=await fetchAll();
+    if(!r.err&&r.sig!==sig&&!$('modal').firstChild){
+      const y=window.scrollY;apply(r);shell();route(true);window.scrollTo(0,y);
+    }
+  }catch(_){}finally{busy=false;}
 }
 function shell(){
   applyTheme();
@@ -434,7 +455,7 @@ function pAbout(){
 }
 function pHistory(){
   $('app').innerHTML=hero(cfg('hist_title','Future Leader'),cfg('hist_sub','ผู้นำพลังใหม่ของพรรค'))+
-  (D.leaders.length?D.leaders.map((l,i)=>`<div class="${i%2?'lalt':''}"><div class="wrap"><div class="leader">${l.image_url?img(l.image_url,l.full_name):'<div class="ph2"></div>'}<div><h3>${e(l.full_name)}</h3><div class="pos">${e(l.position)}</div>
+  (D.leaders.length?D.leaders.map((l,i)=>`<div class="${i%2?'lalt':''}"><div class="wrap"><div class="leader">${l.image_url?img(l.image_url,l.full_name).replace('<img',`<img${bgAttr(l.bg||cfg('leader_bg'))}`):`<div class="ph2"${bgAttr(l.bg||cfg('leader_bg'))}></div>`}<div><h3>${e(l.full_name)}</h3><div class="pos">${e(l.position)}</div>
     ${lines(l.experience).length?`<h4>ประสบการณ์การทำงาน</h4><ul>${lines(l.experience).map(x=>`<li>${e(x)}</li>`).join('')}</ul>`:''}
     ${lines(l.awards).length?`<h4>รางวัลและความสำเร็จ</h4><ul>${lines(l.awards).map(x=>`<li>${e(x)}</li>`).join('')}</ul>`:''}</div></div></div></div>`).join(''):'<section><div class="wrap"><div class="empty">ยังไม่มีข้อมูล</div></div></section>');
 }
@@ -454,16 +475,16 @@ function pNews(){
   bindCards();
 }
 let first=true;
-function route(){
+function route(keep){
   clearTimers();closeModal();
   const r=(location.hash.slice(1)||'/');
   navDraw(r);
   ({'/':pHome,'/about':pAbout,'/history':pHistory,'/members':pMembers,'/policies':pPolicies,'/news':pNews}[r]||pHome)();
-  window.scrollTo(0,0);
+  if(!keep)window.scrollTo(0,0);
   if(first){first=false;popup();}
 }
-window.addEventListener('hashchange',route);
-(async()=>{if(await load()){shell();route();}})();
+window.addEventListener('hashchange',()=>route());
+(async()=>{if(await load()){shell();route();setInterval(poll,2000);}})();
 </script>
 </body>
 </html>
