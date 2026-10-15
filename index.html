@@ -161,17 +161,48 @@ footer small{display:block;opacity:.85;font-size:clamp(12px,2vw,15px)}
 .ct a .ic{width:clamp(20px,3.2vw,26px);height:clamp(20px,3.2vw,26px);border-radius:50%;object-fit:contain;flex:none;display:grid;place-items:center}
 .ct a svg.ic{fill:var(--navy);padding:3px;background:#eef3ff}
 .ct a img.ic{background:#fff}
-@media(max-width:820px){.nav{flex-direction:column;align-items:stretch;gap:6px;padding:8px 12px}nav{justify-content:flex-start}.leader{grid-template-columns:1fr;gap:20px}.leader>img,.leader .ph2{max-width:300px;margin:auto}.wrap{padding:0 16px}.arr{display:none}.track .mem{margin-right:14px}.stage{min-height:300px}}
+@media(min-width:641px) and (max-width:820px){.nav{flex-direction:column;align-items:stretch;gap:6px;padding:8px 12px}nav{justify-content:flex-start}}
+@media(max-width:820px){.leader{grid-template-columns:1fr;gap:20px}.leader>img,.leader .ph2{max-width:300px;margin:auto}.wrap{padding:0 16px}.arr{display:none}.track .mem{margin-right:14px}.stage{min-height:300px}}
 @media(min-width:700px) and (min-height:600px){.stage{--zoom:1.14;--gap:min(32vw,430px);min-height:clamp(480px,54vw,860px);margin-top:calc(-1 * clamp(60px,11vw,200px))}}
 @media(max-width:480px){.hero{min-height:auto}.stage{min-height:min(118vw,520px);flex:none}.modal{padding:10px}.x{width:38px;height:38px;font-size:18px}.ct{width:100%}footer .wrap{flex-direction:column;align-items:flex-start}}
 @media(prefers-reduced-motion:reduce){.track{animation:none}html{scroll-behavior:auto}.sl{transition:none}.dig.flip{animation:none}.star{animation:none;opacity:.6}}
+
+/* hamburger (มือถือเท่านั้น) */
+.burger{display:none;position:relative;width:46px;height:46px;border:0;border-radius:50%;background:color-mix(in srgb,var(--blue) 10%,#fff);flex:none;transition:background .3s,transform .3s}
+.burger:hover{background:color-mix(in srgb,var(--blue) 18%,#fff)}
+.burger:active{transform:scale(.9)}
+.burger i{position:absolute;left:13px;right:13px;height:3px;border-radius:3px;background:var(--navy);transition:transform .45s cubic-bezier(.68,-.5,.27,1.5),opacity .25s,right .3s,background .3s}
+.burger i:nth-child(1){top:15px}
+.burger i:nth-child(2){top:22px;right:20px;transform-origin:left}
+.burger i:nth-child(3){top:29px}
+.burger:hover i:nth-child(2){right:13px}
+.burger.open{background:var(--navy)}
+.burger.open i{background:#fff}
+.burger.open i:nth-child(1){transform:translateY(7px) rotate(45deg)}
+.burger.open i:nth-child(2){opacity:0;transform:translateX(-14px) scaleX(0)}
+.burger.open i:nth-child(3){transform:translateY(-7px) rotate(-45deg)}
+.mback{display:none}
+@media(max-width:640px){
+  .nav{flex-direction:row;align-items:center}
+  .burger{display:block}
+  .mback{display:block;position:fixed;inset:0;z-index:48;background:rgba(5,12,40,.45);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);opacity:0;pointer-events:none;transition:opacity .35s}
+  .mback.show{opacity:1;pointer-events:auto}
+  nav#nav{position:absolute;z-index:49;top:calc(100% + 6px);left:12px;right:12px;flex-direction:column;gap:4px;padding:12px;overflow:hidden;background:#fff;border-radius:24px;box-shadow:0 24px 60px -16px rgba(18,49,143,.55);transform-origin:top right;transform:translateY(-14px) scale(.92);opacity:0;visibility:hidden;transition:transform .4s cubic-bezier(.2,.9,.3,1.2),opacity .3s,visibility 0s .4s}
+  nav#nav.open{transform:none;opacity:1;visibility:visible;transition:transform .4s cubic-bezier(.2,.9,.3,1.2),opacity .3s,visibility 0s}
+  nav#nav a{font-size:17px;padding:13px 18px;border-radius:16px;opacity:0;transform:translateX(-22px);transition:opacity .35s,transform .45s cubic-bezier(.2,.9,.3,1.2),background .2s}
+  nav#nav.open a{opacity:1;transform:none;transition-delay:calc(var(--i)*55ms + 90ms)}
+  nav#nav a.on{background:linear-gradient(90deg,color-mix(in srgb,var(--blue) 14%,#fff),#fff);box-shadow:inset 4px 0 0 var(--blue)}
+}
+@media(prefers-reduced-motion:reduce){.burger i,nav#nav,nav#nav a,.mback{transition:none!important}}
 </style>
 </head>
 <body>
 <header><div class="nav">
   <a class="brand" href="#/" id="brand"></a>
+  <button class="burger" id="burger" aria-label="เมนู" aria-expanded="false" aria-controls="nav"><i></i><i></i><i></i></button>
   <nav id="nav"></nav>
 </div></header>
+<div class="mback" id="mback"></div>
 <main id="app"></main>
 <footer><div class="wrap"><div class="l" id="fl"></div><div class="links" id="fk"></div></div></footer>
 <div id="modal"></div>
@@ -270,7 +301,15 @@ function contacts(){
     return {href,type,label:c.label||c.name||({instagram:'Instagram',facebook:'Facebook',line:'LINE',tiktok:'TikTok',youtube:'YouTube',x:'X',mail:'อีเมล',tel:'โทร'}[type]||'ลิงก์'),logo:fixUrl(c.logo||c.icon||'')};
   }).filter(Boolean);
 }
-function navDraw(r){$('nav').innerHTML=ROUTES.map(x=>`<a href="#${x[0]}" class="${x[0]===r?'on':''}">${x[1]}</a>`).join('');}
+function navDraw(r){$('nav').innerHTML=ROUTES.map((x,i)=>`<a href="#${x[0]}" style="--i:${i}" class="${x[0]===r?'on':''}">${x[1]}</a>`).join('');menu(false);}
+function menu(on){
+  $('nav').classList.toggle('open',on);$('burger').classList.toggle('open',on);$('mback').classList.toggle('show',on);
+  $('burger').setAttribute('aria-expanded',on);
+}
+$('burger').onclick=()=>menu(!$('nav').classList.contains('open'));
+$('mback').onclick=()=>menu(false);
+document.addEventListener('keydown',ev=>{if(ev.key==='Escape')menu(false);});
+window.addEventListener('resize',()=>{if(innerWidth>640)menu(false);});
 const hero=(t,s)=>`<div class="phero" style="${cfg('page_hero')?`background-image:url('${e(fixUrl(cfg('page_hero')))}')`:''}"><h1>${e(t)}</h1>${s?`<p>${e(s)}</p>`:''}</div>`;
 const img=(u,alt='',cls='')=>u?`<img ${cls?`class="${cls}" `:''}referrerpolicy="no-referrer" src="${e(fixUrl(u))}" alt="${e(alt)}" loading="lazy">`:'';
 
@@ -385,7 +424,7 @@ function pHome(){
   <section><div class="wrap center"><h2 class="t">${e(cfg('vision_title','วิสัยทัศน์'))}</h2><p class="lead">${e(cfg('vision'))}</p><a class="btn" href="#/history">ประวัติแกนนำ</a></div></section>
   <section style="padding-top:20px"><div class="wrap"><h2 class="t">นโยบายพรรค</h2><div class="grid3">${pol.map(policyCard).join('')||'<div class="empty">ยังไม่มีนโยบาย</div>'}</div><div class="center" style="margin-top:40px"><a class="btn" href="#/policies">ดูนโยบายทั้งหมด</a></div></div></section>
   ${D.why.length?`<section class="alt"><div class="wrap"><h2 class="t">${e(cfg('why_title','ทำไมต้องคอนนิวเตอร์'))}</h2><div class="grid3">${D.why.map(w=>`<div class="card why" style="cursor:default">${w.image_url?img(w.image_url,w.title):`<div class="ph"></div>`}<div class="ov"><h3>${e(w.title)}</h3><p>${e(w.description)}</p></div></div>`).join('')}</div></div></section>`:''}
-  <section${bgAttr(cfg('member_page_bg'))}><div class="wrap"><h2 class="t">สมาชิกพรรค</h2></div><div class="rows">${marquee(r1,false)}${marquee(r2,true)}</div></section>
+  <section><div class="wrap"><h2 class="t">สมาชิกพรรค</h2></div><div class="rows">${marquee(r1,false)}${marquee(r2,true)}</div></section>
   <section class="cd"><div class="wrap"><h2>${e(cfg('cd_title','นับถอยหลังวันเลือกตั้ง'))}</h2><p id="cdmsg">${e(cfg('countdown')?cfg('cd_sub'):'ยังไม่ได้ตั้งวันเลือกตั้ง')}</p><div class="cdw" id="cdw"></div></div></section>`;
   bindCards();heroSlider();countdown();
 }
@@ -402,7 +441,7 @@ function pHistory(){
 function pMembers(){
   const g={};D.members.forEach(m=>{const k=m.class_name||'ระดับชั้นอื่น';(g[k]=g[k]||[]).push(m);});
   $('app').innerHTML=hero(`${D.members.length} คนทำงาน`,cfg('mem_sub','มากความสามารถ เพรียบพร้อมประสบการณ์'))+
-  `<section${bgAttr(cfg('member_page_bg'))}><div class="wrap">${Object.keys(g).map(k=>`<div class="cls-b"><h2 class="cls">${e(k)}</h2><div class="mgrid">${g[k].map(memCard).join('')}</div></div>`).join('')||'<div class="empty">ยังไม่มีสมาชิก</div>'}</div></section>`;
+  `<section><div class="wrap">${Object.keys(g).map(k=>`<div class="cls-b"><h2 class="cls">${e(k)}</h2><div class="mgrid">${g[k].map(memCard).join('')}</div></div>`).join('')||'<div class="empty">ยังไม่มีสมาชิก</div>'}</div></section>`;
 }
 function pPolicies(){
   $('app').innerHTML=hero(cfg('pol_title','นโยบายทำได้จริง'),cfg('pol_sub','ผ่านการปรึกษาฝ่ายบริหารและคุณครูผู้เกี่ยวข้อง'))+
