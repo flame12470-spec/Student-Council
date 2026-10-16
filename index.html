@@ -194,6 +194,19 @@ footer small{display:block;opacity:.85;font-size:clamp(12px,2vw,15px)}
   nav#nav a.on{background:linear-gradient(90deg,color-mix(in srgb,var(--blue) 14%,#fff),#fff);box-shadow:inset 4px 0 0 var(--blue)}
 }
 @media(prefers-reduced-motion:reduce){.burger i,nav#nav,nav#nav a,.mback{transition:none!important}}
+
+/* policies marquee (มือถือ) / รูปใต้นับถอยหลัง / หน้าเพิ่มเติม */
+.pol-m{display:none}
+.track .pcard{flex:none;width:min(64vw,270px);margin-right:14px;display:block;text-decoration:none}
+.cdimg{margin:clamp(22px,5vw,40px) auto 0;max-width:min(100%,760px)}
+.cdimg img{margin:auto;width:auto;max-height:min(60vh,440px);border-radius:20px;box-shadow:0 18px 40px -14px rgba(0,0,0,.5)}
+.ctext{max-width:860px;margin:0 auto 36px;white-space:pre-line;font-size:clamp(15px,2vw,19px);line-height:1.85}
+.cgal{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr));gap:clamp(12px,2vw,22px)}
+.czoom{padding:0;border:0;background:none;border-radius:20px;overflow:hidden;box-shadow:var(--sh);cursor:zoom-in;line-height:0}
+.czoom img{width:100%;height:auto;transition:transform .35s}
+.czoom:hover img{transform:scale(1.03)}
+@media(max-width:640px){.pol-g{display:none}.pol-m{display:grid}}
+@media(prefers-reduced-motion:reduce){.rows{overflow-x:auto}}
 </style>
 </head>
 <body>
@@ -225,6 +238,11 @@ function bgCss(v){v=String(v||'').trim();if(!v)return '';
   const u=encodeURI(fixUrl(v)).replace(/[()'"]/g,c=>'%'+c.charCodeAt(0).toString(16));
   return `background:#e9edf6 center/cover no-repeat url(${u})`;}
 const bgAttr=v=>{const b=bgCss(v);return b?` style="${e(b)}"`:'';};
+/* พื้นหลังส่วนนับถอยหลัง: สีล้วน หรือรูป + ฟิล์มมืดให้อ่านตัวหนังสือออก */
+const cdAttr=v=>{v=String(v||'').trim();if(!v)return '';let b;
+  if(HEX.test(v))b=`background:${v}`;
+  else{const u=encodeURI(fixUrl(v)).replace(/[()'"]/g,c=>'%'+c.charCodeAt(0).toString(16));b=`background:linear-gradient(rgba(8,20,70,.55),rgba(8,20,70,.55)),url(${u}) center/cover no-repeat`;}
+  return ` style="${e(b)}"`;};
 function applyTheme(){
   const r=document.documentElement.style;
   [['theme_navy','--navy'],['theme_blue','--blue'],['theme_sky','--sky']].forEach(([k,v])=>{const c=cfg(k);if(HEX.test(c))r.setProperty(v,c);else r.removeProperty(v);});
@@ -247,7 +265,10 @@ function fixUrl(u){
   return u;
 }
 const U=(window.CSS&&CSS.supports&&CSS.supports('height','1dvh'))?'dvh':'vh';
-const ROUTES=[['/','หน้าหลัก'],['/about','เกี่ยวกับพรรค'],['/history','ประวัติแกนนำ'],['/members','สมาชิกพรรค'],['/policies','นโยบายพรรค'],['/news','ข่าวกิจกรรม']];
+const ROUTES=[['/','หน้าหลัก','menu_home'],['/about','เกี่ยวกับพรรค','menu_about'],['/history','ประวัติแกนนำ','menu_history'],['/members','สมาชิกพรรค','menu_members'],['/policies','นโยบายพรรค','menu_policies'],['/news','ข่าวกิจกรรม','menu_news']];
+/* หน้าเพิ่มเติมที่แอดมินสร้างเอง เก็บเป็น JSON ใน cp_settings key = custom_pages */
+function customPages(){try{const raw=cfg('custom_pages');if(!raw)return [];const p=typeof raw==='string'?JSON.parse(raw):raw;return Array.isArray(p)?p.filter(x=>x&&x.id&&x.title):[];}catch(_){return [];}}
+const routes=()=>ROUTES.map(([p,l,k])=>[p,cfg(k,l)]).concat(customPages().filter(p=>p.show!==false).map(p=>['/p/'+p.id,p.title]));
 let timers=[];
 const clearTimers=()=>{timers.forEach(t=>typeof t==='function'?t():clearInterval(t));timers=[];};
 
@@ -316,13 +337,16 @@ function contacts(){
     if(cfg('instagram'))arr.push({label:'Instagram',url:cfg('instagram')});
     if(cfg('facebook'))arr.push({label:'Facebook',url:cfg('facebook')});
   }
+  /* เบอร์โทร: เปิด/ปิดได้จากแอดมิน (phone_on = false คือซ่อน) */
+  const ph=String(cfg('phone_number')||'').trim();
+  if(ph&&cfg('phone_on')!=='false')arr.unshift({label:'โทร '+ph,url:'tel:'+ph.replace(/[^\d+]/g,'')});
   return arr.map(c=>{const u=String(c.url||c.href||'').trim();if(!u)return null;
     const href=/^(https?:|tel:|mailto:)/i.test(u)?u:(/^[\w.+-]+@[\w-]+\.[\w.]+$/.test(u)?'mailto:'+u:(/^\+?[\d\s-]{8,}$/.test(u)?'tel:'+u.replace(/[\s-]/g,''):'https://'+u));
     const type=c.type||ctype(href);
     return {href,type,label:c.label||c.name||({instagram:'Instagram',facebook:'Facebook',line:'LINE',tiktok:'TikTok',youtube:'YouTube',x:'X',mail:'อีเมล',tel:'โทร'}[type]||'ลิงก์'),logo:fixUrl(c.logo||c.icon||'')};
   }).filter(Boolean);
 }
-function navDraw(r){$('nav').innerHTML=ROUTES.map((x,i)=>`<a href="#${x[0]}" style="--i:${i}" class="${x[0]===r?'on':''}">${x[1]}</a>`).join('');menu(false);}
+function navDraw(r){$('nav').innerHTML=routes().map((x,i)=>`<a href="#${x[0]}" style="--i:${i}" class="${x[0]===r?'on':''}">${x[1]}</a>`).join('');menu(false);}
 function menu(on){
   $('nav').classList.toggle('open',on);$('burger').classList.toggle('open',on);$('mback').classList.toggle('show',on);
   $('burger').setAttribute('aria-expanded',on);
@@ -368,10 +392,18 @@ function popup(){
 
 /* ---------- pages ---------- */
 function policyCard(p){return `<button class="card" data-pol="${p.id}"><span class="badge ${p.status==='done'?'done':'doing'}">${p.status==='done'?'ทำแล้ว':'กำลังดำเนินการ'}</span>${p.image_url?img(p.image_url,p.title):`<div class="ph">${e(p.title)}</div>`}</button>`;}
+const polBadge=p=>`<span class="badge ${p.status==='done'?'done':'doing'}">${p.status==='done'?'ทำแล้ว':'กำลังดำเนินการ'}</span>`;
+function polLink(p){return `<a class="card pcard" href="#/policies" aria-label="${e(p.title)}">${polBadge(p)}${p.image_url?img(p.image_url,p.title):`<div class="ph">${e(p.title)}</div>`}</a>`;}
+function polMarquee(arr){
+  if(!arr.length)return '';
+  let b=arr.slice();while(b.length<5)b=b.concat(arr);
+  return `<div class="track" style="--d:${Math.max(18,b.length*5)}s">${b.concat(b).map(polLink).join('')}</div>`;
+}
 function memCard(m){return `<div class="mem"${bgAttr(m.bg||cfg('member_card_bg'))}>${img(m.image_url,m.nickname)}<div class="ov"><b>${e(m.nickname)}</b>${m.role?`<em>${e(m.role)}</em>`:''}<small>${e([m.class_name,m.full_name].filter(Boolean).join(' | '))}</small></div></div>`;}
 function bindCards(){
   document.querySelectorAll('[data-pol]').forEach(b=>b.onclick=()=>openPolicy(b.dataset.pol));
   document.querySelectorAll('[data-news]').forEach(b=>b.onclick=()=>openNews(b.dataset.news));
+  document.querySelectorAll('[data-zoom]').forEach(b=>b.onclick=()=>modal(img(b.dataset.zoom,'','big'),'imgonly',`--ih:calc(100${U} - 28px)`));
 }
 function stars(){return Array.from({length:40},(_,k)=>{const sp=k%4===0,z=sp?10+Math.random()*12:3+Math.random()*6;return `<i class="star${sp?' sp':''}" style="left:${Math.random()*98}%;top:${2+Math.random()*86}%;width:${z}px;height:${z}px;--t:${(2+Math.random()*3).toFixed(1)}s;--dl:-${(Math.random()*5).toFixed(1)}s"></i>`}).join('');}
 
@@ -430,8 +462,8 @@ function countdown(){
     const vis=()=>{if(!document.hidden)upd();};document.addEventListener('visibilitychange',vis);timers.push(()=>document.removeEventListener('visibilitychange',vis));}
 }
 function pHome(){
-  const S=D.slides,half=Math.ceil(D.members.length/2);
-  const r1=D.members.length>6?D.members.slice(0,half):D.members,r2=D.members.length>6?D.members.slice(half):[];
+  const S=D.slides,M=D.members,k=M.length>6?3:1,mrows=Array.from({length:k},()=>[]);
+  M.forEach((m,i)=>mrows[i%k].push(m));
   const pol=D.policies.slice(0,3);
   $('app').innerHTML=`
   <div class="hero">${stars()}
@@ -443,10 +475,10 @@ function pHome(){
     <div class="cap"><b id="cn"></b><span id="cr"></span><a href="#/history">ทำความรู้จัก ↓</a>${S.length>1?`<div class="dots">${S.map(()=>'<i></i>').join('')}</div>`:''}</div>
   </div>
   <section><div class="wrap center"><h2 class="t">${e(cfg('vision_title','วิสัยทัศน์'))}</h2><p class="lead">${e(cfg('vision'))}</p><a class="btn" href="#/history">ประวัติแกนนำ</a></div></section>
-  <section style="padding-top:20px"><div class="wrap"><h2 class="t">นโยบายพรรค</h2><div class="grid3">${pol.map(policyCard).join('')||'<div class="empty">ยังไม่มีนโยบาย</div>'}</div><div class="center" style="margin-top:40px"><a class="btn" href="#/policies">ดูนโยบายทั้งหมด</a></div></div></section>
+  <section style="padding-top:20px"><div class="wrap"><h2 class="t">นโยบายพรรค</h2><div class="grid3${D.policies.length?' pol-g':''}">${pol.map(policyCard).join('')||'<div class="empty">ยังไม่มีนโยบาย</div>'}</div></div>${D.policies.length?`<div class="rows pol-m">${polMarquee(D.policies)}</div>`:''}<div class="wrap center" style="margin-top:40px"><a class="btn" href="#/policies">ดูนโยบายทั้งหมด</a></div></section>
   ${D.why.length?`<section class="alt"><div class="wrap"><h2 class="t">${e(cfg('why_title','ทำไมต้องคอนนิวเตอร์'))}</h2><div class="grid3">${D.why.map(w=>`<div class="card why" style="cursor:default">${w.image_url?img(w.image_url,w.title):`<div class="ph"></div>`}<div class="ov"><h3>${e(w.title)}</h3><p>${e(w.description)}</p></div></div>`).join('')}</div></div></section>`:''}
-  <section><div class="wrap"><h2 class="t">สมาชิกพรรค</h2></div><div class="rows">${marquee(r1,false)}${marquee(r2,true)}</div></section>
-  <section class="cd"><div class="wrap"><h2>${e(cfg('cd_title','นับถอยหลังวันเลือกตั้ง'))}</h2><p id="cdmsg">${e(cfg('countdown')?cfg('cd_sub'):'ยังไม่ได้ตั้งวันเลือกตั้ง')}</p><div class="cdw" id="cdw"></div></div></section>`;
+  <section><div class="wrap"><h2 class="t">สมาชิกพรรค</h2></div><div class="rows">${mrows.map((r,i)=>marquee(r,i%2===1)).join('')}</div></section>
+  <section class="cd"${cdAttr(cfg('cd_bg'))}><div class="wrap"><h2>${e(cfg('cd_title','นับถอยหลังวันเลือกตั้ง'))}</h2><p id="cdmsg">${e(cfg('countdown')?cfg('cd_sub'):'ยังไม่ได้ตั้งวันเลือกตั้ง')}</p><div class="cdw" id="cdw"></div>${cfg('cd_image')?`<div class="cdimg">${img(cfg('cd_image'),'')}</div>`:''}</div></section>`;
   bindCards();heroSlider();countdown();
 }
 function pAbout(){
@@ -474,12 +506,20 @@ function pNews(){
   `<section><div class="wrap">${D.news.length?`<div class="news">${D.news.map(n=>`<button class="ncard" data-news="${n.id}">${n.image_url?img(n.image_url,n.title):'<div class="ph3"></div>'}<div class="b"><small>${fdate(n.published_at)}</small><h3>${e(n.title)}</h3><p>${e(n.body)}</p></div></button>`).join('')}</div>`:'<div class="empty">ยังไม่มีข่าวกิจกรรมในตอนนี้ — ไว้กลับมาดูใหม่เร็ว ๆ นี้</div>'}</div></section>`;
   bindCards();
 }
+function pCustom(id){
+  const p=customPages().find(x=>x.id===id);
+  if(!p){$('app').innerHTML=hero('ไม่พบหน้านี้','')+`<section><div class="wrap"><div class="empty">ไม่พบหน้าที่ต้องการ หรือถูกลบไปแล้ว</div></div></section>`;return;}
+  const ims=(p.images||[]).filter(Boolean);
+  $('app').innerHTML=hero(p.title,p.sub)+`<section><div class="wrap">${p.body?`<div class="ctext">${e(p.body)}</div>`:''}${ims.length?`<div class="cgal">${ims.map(u=>`<button class="czoom" data-zoom="${e(u)}" aria-label="ดูรูปใหญ่">${img(u,p.title)}</button>`).join('')}</div>`:''}${!p.body&&!ims.length?'<div class="empty">ยังไม่มีเนื้อหา</div>':''}</div></section>`;
+  bindCards();
+}
 let first=true;
 function route(keep){
   clearTimers();closeModal();
   const r=(location.hash.slice(1)||'/');
   navDraw(r);
-  ({'/':pHome,'/about':pAbout,'/history':pHistory,'/members':pMembers,'/policies':pPolicies,'/news':pNews}[r]||pHome)();
+  const cm=r.match(/^\/p\/([\w-]+)$/);
+  if(cm)pCustom(cm[1]);else ({'/':pHome,'/about':pAbout,'/history':pHistory,'/members':pMembers,'/policies':pPolicies,'/news':pNews}[r]||pHome)();
   if(!keep)window.scrollTo(0,0);
   if(first){first=false;popup();}
 }
