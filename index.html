@@ -250,16 +250,19 @@ const cfg=(k,d='')=>D.cfg[k]||d;
 const OLD_NAMES=['พรรคคอนเน็กซ์','Connext Party'];
 const NAME_TH='พรรคคอนนิวเตอร์',NAME_EN='Connor Newte';
 const HEX=/^#[0-9a-f]{6}$/i;
+/* กันลิงก์ถูกเข้ารหัสซ้ำ (เช่น %20 กลายเป็น %2520) */
+const encU=x=>{try{return encodeURI(decodeURI(x));}catch(_){return encodeURI(x);}};
+const rowBg=id=>{try{return JSON.parse(cfg('row_bg')||'{}')[id]||'';}catch(_){return '';}};
 /* พื้นหลังแบบสีหรือรูป -> สไตล์ CSS */
 function bgCss(v){v=String(v||'').trim();if(!v)return '';
   if(HEX.test(v))return `background:${v}`;
-  const u=encodeURI(fixUrl(v)).replace(/[()'"]/g,c=>'%'+c.charCodeAt(0).toString(16));
+  const u=encU(fixUrl(v)).replace(/[()'"]/g,c=>'%'+c.charCodeAt(0).toString(16));
   return `background:#e9edf6 center/cover no-repeat url(${u})`;}
 const bgAttr=v=>{const b=bgCss(v);return b?` style="${e(b)}"`:'';};
 /* พื้นหลังส่วนนับถอยหลัง: สีล้วน หรือรูป + ฟิล์มมืดให้อ่านตัวหนังสือออก */
 const cdAttr=v=>{v=String(v||'').trim();if(!v)return '';let b;
   if(HEX.test(v))b=`background:${v}`;
-  else{const u=encodeURI(fixUrl(v)).replace(/[()'"]/g,c=>'%'+c.charCodeAt(0).toString(16));b=`background:linear-gradient(rgba(8,20,70,.55),rgba(8,20,70,.55)),url(${u}) center/cover no-repeat`;}
+  else{const u=encU(fixUrl(v)).replace(/[()'"]/g,c=>'%'+c.charCodeAt(0).toString(16));b=`background:linear-gradient(rgba(8,20,70,.55),rgba(8,20,70,.55)),url(${u}) center/cover no-repeat`;}
   return ` style="${e(b)}"`;};
 function applyTheme(){
   const r=document.documentElement.style;
@@ -381,7 +384,7 @@ const deco=()=>(cfg('party_no_on')!=='false'&&cfg('party_no')?`<div class="pno">
 const fzOn=()=>{const m=cfg('fz_mode_'+pgKey())||'global';return m==='on'||(m==='global'&&cfg('fz_on')!=='false');};
 const hz=()=>fzOn()?'':' nofade';
 const fuzz=()=>fzOn()&&pgKey()!=='home'?'<div class="fuzz"></div>':'';
-const hero=(t,s)=>`<div class="phero" style="${cfg('page_hero')?`background-image:url('${e(fixUrl(cfg('page_hero')))}')`:''}">${deco()}${fuzz()}<h1>${e(t)}</h1>${s?`<p>${e(s)}</p>`:''}</div>`;
+const hero=(t,s)=>`<div class="phero" style="${cfg('page_hero')?`background-image:url('${e(encU(fixUrl(cfg('page_hero'))))}')`:''}">${deco()}${fuzz()}<h1>${e(t)}</h1>${s?`<p>${e(s)}</p>`:''}</div>`;
 const img=(u,alt='',cls='')=>u?`<img ${cls?`class="${cls}" `:''}referrerpolicy="no-referrer" src="${e(fixUrl(u))}" alt="${e(alt)}" loading="lazy">`:'';
 
 /* ---------- modal (ปรับขนาดให้พอดีทุกอุปกรณ์) ---------- */
@@ -437,7 +440,7 @@ function initSliders(){
     timers.push(()=>{clearInterval(t);mq.removeEventListener&&mq.removeEventListener('change',re);});
   });
 }
-function memCard(m){return `<div class="mem"${bgAttr(m.bg||cfg('member_card_bg'))}>${img(m.image_url,m.nickname)}<div class="ov"><b>${e(m.nickname)}</b>${m.role?`<em>${e(m.role)}</em>`:''}<small>${e([m.class_name,m.full_name].filter(Boolean).join(' | '))}</small></div></div>`;}
+function memCard(m){return `<div class="mem"${bgAttr(m.bg||rowBg(m.id)||cfg('member_card_bg'))}>${img(m.image_url,m.nickname)}<div class="ov"><b>${e(m.nickname)}</b>${m.role?`<em>${e(m.role)}</em>`:''}<small>${e([m.class_name,m.full_name].filter(Boolean).join(' | '))}</small></div></div>`;}
 function bindCards(){
   document.querySelectorAll('[data-pol]').forEach(b=>b.onclick=()=>openPolicy(b.dataset.pol));
   document.querySelectorAll('[data-news]').forEach(b=>b.onclick=()=>openNews(b.dataset.news));
@@ -525,7 +528,7 @@ function pAbout(){
 }
 function pHistory(){
   $('app').innerHTML=hero(cfg('hist_title','Future Leader'),cfg('hist_sub','ผู้นำพลังใหม่ของพรรค'))+
-  (D.leaders.length?D.leaders.map((l,i)=>`<div class="${i%2?'lalt':''}"><div class="wrap"><div class="leader">${l.image_url?img(l.image_url,l.full_name).replace('<img',`<img${bgAttr(l.bg||cfg('leader_bg'))}`):`<div class="ph2"${bgAttr(l.bg||cfg('leader_bg'))}></div>`}<div><h3>${e(l.full_name)}</h3><div class="pos">${e(l.position)}</div>
+  (D.leaders.length?D.leaders.map((l,i)=>`<div class="${i%2?'lalt':''}"><div class="wrap"><div class="leader">${l.image_url?img(l.image_url,l.full_name).replace('<img',`<img${bgAttr(l.bg||rowBg(l.id)||cfg('leader_bg'))}`):`<div class="ph2"${bgAttr(l.bg||rowBg(l.id)||cfg('leader_bg'))}></div>`}<div><h3>${e(l.full_name)}</h3><div class="pos">${e(l.position)}</div>
     ${lines(l.experience).length?`<h4>ประสบการณ์การทำงาน</h4><ul>${lines(l.experience).map(x=>`<li>${e(x)}</li>`).join('')}</ul>`:''}
     ${lines(l.awards).length?`<h4>รางวัลและความสำเร็จ</h4><ul>${lines(l.awards).map(x=>`<li>${e(x)}</li>`).join('')}</ul>`:''}</div></div></div></div>`).join(''):'<section><div class="wrap"><div class="empty">ยังไม่มีข้อมูล</div></div></section>');
 }
