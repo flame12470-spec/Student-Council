@@ -201,14 +201,14 @@ footer small{display:block;opacity:.85;font-size:clamp(12px,2vw,15px)}
 .cs{display:block}
 .cs.mob{display:none}
 .pcard{display:block;text-decoration:none}
-.cs-s{position:relative;width:min(78vw,340px);margin:0 auto;aspect-ratio:4/5}
-.cs-why .cs-s{aspect-ratio:3/4}
-.cs-s>*{position:absolute;inset:0;opacity:0;transform:scale(.94);transition:opacity .7s ease,transform .7s ease;pointer-events:none}
-.cs-s>.on{opacity:1;transform:none;pointer-events:auto;z-index:2}
+.cs-s{display:grid;grid-template-columns:1fr;gap:clamp(14px,2.4vw,24px);width:min(78vw,340px);margin:0 auto}
+.cs-s>*{display:none}
+.cs-s>.on{display:block;animation:csIn .6s ease backwards}
+@keyframes csIn{from{opacity:0;transform:scale(.94)}to{opacity:1;transform:none}}
 .cs-dots{display:flex;gap:8px;justify-content:center;margin-top:16px}
 .cs-dots i{width:9px;height:9px;border-radius:99px;background:#c7d2ee;cursor:pointer;transition:width .3s,background .3s}
 .cs-dots i.on{width:26px;background:var(--blue)}
-@media(min-width:700px){.cs-s{width:min(46vw,400px)}}
+@media(min-width:700px){.cs-s{grid-template-columns:repeat(3,minmax(0,1fr));width:min(calc(100% - 48px),1240px)}}
 .cdimg{margin:clamp(22px,5vw,40px) auto 0;max-width:min(100%,760px)}
 .cdimg img{margin:auto;width:auto;max-height:min(60vh,440px);border-radius:20px;box-shadow:0 18px 40px -14px rgba(0,0,0,.5)}
 .ctext{max-width:860px;margin:0 auto 36px;white-space:pre-line;font-size:clamp(15px,2vw,19px);line-height:1.85}
@@ -407,15 +407,19 @@ const polBadge=p=>`<span class="badge ${p.status==='done'?'done':'doing'}">${p.s
 function polLink(p){return `<a class="card pcard" href="#/policies" aria-label="${e(p.title)}">${polBadge(p)}${p.image_url?img(p.image_url,p.title):`<div class="ph">${e(p.title)}</div>`}</a>`;}
 const whyCard=w=>`<div class="card why" style="cursor:default">${w.image_url?img(w.image_url,w.title):`<div class="ph"></div>`}<div class="ov"><h3>${e(w.title)}</h3><p>${e(w.description)}</p></div></div>`;
 /* สไลด์เปลี่ยนรูปวนอัตโนมัติ (ใช้กับนโยบาย / ทำไมต้อง... เมื่อมีเกิน 3 อัน) */
-const slides=cards=>`<div class="cs-s">${cards.join('')}</div>${cards.length>1?`<div class="cs-dots">${cards.map(()=>'<i></i>').join('')}</div>`:''}`;
+const slides=cards=>`<div class="cs-s">${cards.join('')}</div><div class="cs-dots"></div>`;
+/* คอม/ไอแพดแสดงทีละ 3 อันแล้วเปลี่ยนทีละ 3 · มือถือแสดงทีละ 1 */
 function initSliders(){
+  const mq=window.matchMedia('(min-width:700px)');
   document.querySelectorAll('.cs').forEach(box=>{
-    const cs=[...box.querySelectorAll('.cs-s>*')],ds=[...box.querySelectorAll('.cs-dots i')];
-    if(!cs.length)return;let c=0,t=null;
-    const show=i=>{c=(i+cs.length)%cs.length;cs.forEach((el,k)=>el.classList.toggle('on',k===c));ds.forEach((d,k)=>d.classList.toggle('on',k===c));};
-    const start=()=>{clearInterval(t);if(cs.length>1)t=setInterval(()=>show(c+1),3500);};
-    show(0);start();timers.push(()=>clearInterval(t));
-    ds.forEach((d,k)=>d.onclick=()=>{show(k);start();});
+    const cs=[...box.querySelectorAll('.cs-s>*')],dw=box.querySelector('.cs-dots'),n=cs.length;
+    if(!n)return;let p=0,t=null,per=1,pages=1;
+    const calc=()=>{per=mq.matches?3:1;pages=Math.ceil(n/per);dw.innerHTML=pages>1?'<i></i>'.repeat(pages):'';dw.querySelectorAll('i').forEach((d,k)=>d.onclick=()=>{show(k);start();});};
+    const show=k=>{p=(k+pages)%pages;const on=new Set();for(let j=0;j<Math.min(per,n);j++)on.add((p*per+j)%n);cs.forEach((el,i)=>el.classList.toggle('on',on.has(i)));dw.querySelectorAll('i').forEach((d,i)=>d.classList.toggle('on',i===p));};
+    const start=()=>{clearInterval(t);if(pages>1)t=setInterval(()=>show(p+1),3500);};
+    const re=()=>{calc();show(0);start();};
+    re();mq.addEventListener&&mq.addEventListener('change',re);
+    timers.push(()=>{clearInterval(t);mq.removeEventListener&&mq.removeEventListener('change',re);});
   });
 }
 function memCard(m){return `<div class="mem"${bgAttr(m.bg||cfg('member_card_bg'))}>${img(m.image_url,m.nickname)}<div class="ov"><b>${e(m.nickname)}</b>${m.role?`<em>${e(m.role)}</em>`:''}<small>${e([m.class_name,m.full_name].filter(Boolean).join(' | '))}</small></div></div>`;}
