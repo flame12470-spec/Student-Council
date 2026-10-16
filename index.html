@@ -197,7 +197,13 @@ footer small{display:block;opacity:.85;font-size:clamp(12px,2vw,15px)}
 
 /* policies marquee (มือถือ) / รูปใต้นับถอยหลัง / หน้าเพิ่มเติม */
 .pol-m{display:none}
-.track .pcard{flex:none;width:min(64vw,270px);margin-right:14px;display:block;text-decoration:none}
+.pcard{display:block;text-decoration:none}
+.pol-s{position:relative;width:min(78vw,340px);margin:0 auto;aspect-ratio:4/5}
+.pol-s .pcard{position:absolute;inset:0;opacity:0;transform:scale(.94);transition:opacity .7s ease,transform .7s ease;pointer-events:none}
+.pol-s .pcard.on{opacity:1;transform:none;pointer-events:auto;z-index:2}
+.pol-dots{display:flex;gap:8px;justify-content:center;margin-top:16px}
+.pol-dots i{width:9px;height:9px;border-radius:99px;background:#c7d2ee;cursor:pointer;transition:width .3s,background .3s}
+.pol-dots i.on{width:26px;background:var(--blue)}
 .cdimg{margin:clamp(22px,5vw,40px) auto 0;max-width:min(100%,760px)}
 .cdimg img{margin:auto;width:auto;max-height:min(60vh,440px);border-radius:20px;box-shadow:0 18px 40px -14px rgba(0,0,0,.5)}
 .ctext{max-width:860px;margin:0 auto 36px;white-space:pre-line;font-size:clamp(15px,2vw,19px);line-height:1.85}
@@ -205,7 +211,7 @@ footer small{display:block;opacity:.85;font-size:clamp(12px,2vw,15px)}
 .czoom{padding:0;border:0;background:none;border-radius:20px;overflow:hidden;box-shadow:var(--sh);cursor:zoom-in;line-height:0}
 .czoom img{width:100%;height:auto;transition:transform .35s}
 .czoom:hover img{transform:scale(1.03)}
-@media(max-width:640px){.pol-g{display:none}.pol-m{display:grid}}
+@media(max-width:640px){.pol-g{display:none}.pol-m{display:block}}
 @media(prefers-reduced-motion:reduce){.rows{overflow-x:auto}}
 </style>
 </head>
@@ -394,10 +400,17 @@ function popup(){
 function policyCard(p){return `<button class="card" data-pol="${p.id}"><span class="badge ${p.status==='done'?'done':'doing'}">${p.status==='done'?'ทำแล้ว':'กำลังดำเนินการ'}</span>${p.image_url?img(p.image_url,p.title):`<div class="ph">${e(p.title)}</div>`}</button>`;}
 const polBadge=p=>`<span class="badge ${p.status==='done'?'done':'doing'}">${p.status==='done'?'ทำแล้ว':'กำลังดำเนินการ'}</span>`;
 function polLink(p){return `<a class="card pcard" href="#/policies" aria-label="${e(p.title)}">${polBadge(p)}${p.image_url?img(p.image_url,p.title):`<div class="ph">${e(p.title)}</div>`}</a>`;}
-function polMarquee(arr){
+function polSlides(arr){
   if(!arr.length)return '';
-  let b=arr.slice();while(b.length<5)b=b.concat(arr);
-  return `<div class="track" style="--d:${Math.max(18,b.length*5)}s">${b.concat(b).map(polLink).join('')}</div>`;
+  return `<div class="pol-s">${arr.map(polLink).join('')}</div>${arr.length>1?`<div class="pol-dots">${arr.map(()=>'<i></i>').join('')}</div>`:''}`;
+}
+function polSlider(){
+  const cs=[...document.querySelectorAll('.pol-s .pcard')],ds=[...document.querySelectorAll('.pol-dots i')];
+  if(!cs.length)return;let c=0,t=null;
+  const show=i=>{c=(i+cs.length)%cs.length;cs.forEach((el,k)=>el.classList.toggle('on',k===c));ds.forEach((d,k)=>d.classList.toggle('on',k===c));};
+  const start=()=>{clearInterval(t);if(cs.length>1)t=setInterval(()=>show(c+1),3500);};
+  show(0);start();timers.push(()=>clearInterval(t));
+  ds.forEach((d,k)=>d.onclick=()=>{show(k);start();});
 }
 function memCard(m){return `<div class="mem"${bgAttr(m.bg||cfg('member_card_bg'))}>${img(m.image_url,m.nickname)}<div class="ov"><b>${e(m.nickname)}</b>${m.role?`<em>${e(m.role)}</em>`:''}<small>${e([m.class_name,m.full_name].filter(Boolean).join(' | '))}</small></div></div>`;}
 function bindCards(){
@@ -475,11 +488,11 @@ function pHome(){
     <div class="cap"><b id="cn"></b><span id="cr"></span><a href="#/history">ทำความรู้จัก ↓</a>${S.length>1?`<div class="dots">${S.map(()=>'<i></i>').join('')}</div>`:''}</div>
   </div>
   <section><div class="wrap center"><h2 class="t">${e(cfg('vision_title','วิสัยทัศน์'))}</h2><p class="lead">${e(cfg('vision'))}</p><a class="btn" href="#/history">ประวัติแกนนำ</a></div></section>
-  <section style="padding-top:20px"><div class="wrap"><h2 class="t">นโยบายพรรค</h2><div class="grid3${D.policies.length?' pol-g':''}">${pol.map(policyCard).join('')||'<div class="empty">ยังไม่มีนโยบาย</div>'}</div></div>${D.policies.length?`<div class="rows pol-m">${polMarquee(D.policies)}</div>`:''}<div class="wrap center" style="margin-top:40px"><a class="btn" href="#/policies">ดูนโยบายทั้งหมด</a></div></section>
+  <section style="padding-top:20px"><div class="wrap"><h2 class="t">นโยบายพรรค</h2><div class="grid3${D.policies.length?' pol-g':''}">${pol.map(policyCard).join('')||'<div class="empty">ยังไม่มีนโยบาย</div>'}</div></div>${D.policies.length?`<div class="pol-m">${polSlides(D.policies)}</div>`:''}<div class="wrap center" style="margin-top:40px"><a class="btn" href="#/policies">ดูนโยบายทั้งหมด</a></div></section>
   ${D.why.length?`<section class="alt"><div class="wrap"><h2 class="t">${e(cfg('why_title','ทำไมต้องคอนนิวเตอร์'))}</h2><div class="grid3">${D.why.map(w=>`<div class="card why" style="cursor:default">${w.image_url?img(w.image_url,w.title):`<div class="ph"></div>`}<div class="ov"><h3>${e(w.title)}</h3><p>${e(w.description)}</p></div></div>`).join('')}</div></div></section>`:''}
   <section><div class="wrap"><h2 class="t">สมาชิกพรรค</h2></div><div class="rows">${mrows.map((r,i)=>marquee(r,i%2===1)).join('')}</div></section>
   <section class="cd"${cdAttr(cfg('cd_bg'))}><div class="wrap"><h2>${e(cfg('cd_title','นับถอยหลังวันเลือกตั้ง'))}</h2><p id="cdmsg">${e(cfg('countdown')?cfg('cd_sub'):'ยังไม่ได้ตั้งวันเลือกตั้ง')}</p><div class="cdw" id="cdw"></div>${cfg('cd_image')?`<div class="cdimg">${img(cfg('cd_image'),'')}</div>`:''}</div></section>`;
-  bindCards();heroSlider();countdown();
+  bindCards();heroSlider();polSlider();countdown();
 }
 function pAbout(){
   $('app').innerHTML=hero(cfg('about_title','บริหารจัดการอย่างเป็นระบบ'),cfg('about_sub','ด้วยเทคโนโลยีดิจิทัลและการบริหารจัดการแบบมีส่วนร่วม'))+
