@@ -218,11 +218,6 @@ footer small{display:block;opacity:.85;font-size:clamp(12px,2vw,15px)}
 .czoom:hover img{transform:scale(1.03)}
 @media(max-width:640px){.pol-g{display:none}.cs.mob{display:block}}
 @media(prefers-reduced-motion:reduce){.rows{overflow-x:auto}}
-.pno{position:absolute;top:14px;right:16px;z-index:3;width:68px;height:68px;border-radius:50%;background:#fff;color:var(--navy);display:grid;place-content:center;text-align:center;line-height:1;font-weight:700;box-shadow:0 6px 18px rgba(0,0,0,.2)}.pno small{font-size:11px}.pno b{font-size:26px}
-.lpic{position:absolute;left:3%;bottom:0;height:min(72%,380px);max-width:34%;z-index:2;object-fit:contain;object-position:left bottom;pointer-events:none}
-.hero .lpic{bottom:calc(var(--fade) * .55)}
-.bump{position:relative;z-index:3;margin-top:-44px;text-align:center;pointer-events:none}.bump img{display:block;margin:0 auto;max-width:100%;max-height:140px;object-fit:contain}
-@media(max-width:700px){.phero .lpic{display:none}.hero .lpic{height:34%;max-width:40%}}
 </style>
 </head>
 <body>
@@ -371,13 +366,7 @@ $('burger').onclick=()=>menu(!$('nav').classList.contains('open'));
 $('mback').onclick=()=>menu(false);
 document.addEventListener('keydown',ev=>{if(ev.key==='Escape')menu(false);});
 window.addEventListener('resize',()=>{if(innerWidth>640)menu(false);});
-/* เบอร์พรรค / รูปหัวหน้า / ภาพนูนใต้แบนเนอร์ (ตั้งค่าได้รายหน้าจากแอดมิน) */
-const pgKey=()=>{const r=location.hash.slice(1)||'/',m=r.match(/^\/p\/([\w-]+)$/);return m?m[1]:({'/':'home','/about':'about','/history':'history','/members':'members','/policies':'policies','/news':'news'}[r]||'home');};
-const pgImg=(pre,glob)=>{const m=cfg(pre+'_mode_'+pgKey())||'global';return m==='none'?'':m==='own'?cfg(pre+'_img_'+pgKey()):cfg(glob);};
-const picTag=(u,c)=>u?`<img class="${c}" src="${e(fixUrl(u))}" alt="" referrerpolicy="no-referrer">`:'';
-const deco=()=>(cfg('party_no_on')!=='false'&&cfg('party_no')?`<div class="pno"><small>เบอร์</small><b>${e(cfg('party_no'))}</b></div>`:'')+picTag(pgImg('lp','leader_photo'),'lpic');
-const bump=()=>{const u=pgImg('bump','bump_img');return u?`<div class="bump">${picTag(u,'')}</div>`:'';};
-const hero=(t,s)=>`<div class="phero" style="${cfg('page_hero')?`background-image:url('${e(fixUrl(cfg('page_hero')))}')`:''}">${deco()}<h1>${e(t)}</h1>${s?`<p>${e(s)}</p>`:''}</div>${bump()}`;
+const hero=(t,s)=>`<div class="phero" style="${cfg('page_hero')?`background-image:url('${e(fixUrl(cfg('page_hero')))}')`:''}"><h1>${e(t)}</h1>${s?`<p>${e(s)}</p>`:''}</div>`;
 const img=(u,alt='',cls='')=>u?`<img ${cls?`class="${cls}" `:''}referrerpolicy="no-referrer" src="${e(fixUrl(u))}" alt="${e(alt)}" loading="lazy">`:'';
 
 /* ---------- modal (ปรับขนาดให้พอดีทุกอุปกรณ์) ---------- */
@@ -500,14 +489,14 @@ function pHome(){
   if(!mrows[1].length)mrows[1]=mrows[0].slice();
   const pol=D.policies.slice(0,3);
   $('app').innerHTML=`
-  <div class="hero">${stars()}${deco()}
+  <div class="hero">${stars()}
     <h1><small>${e(cfg('hero_1','พรรคคอนนิวเตอร์'))}</small><span>${e(cfg('hero_2','เป็นได้มากกว่านี้'))}</span></h1>
     <div class="stage" id="stage">
       ${S.map(s=>`<div class="sl">${img(s.image_url,s.name).replace(' loading="lazy"','')}</div>`).join('')}
       ${S.length>1?`<button class="arr l" id="pv" aria-label="ก่อนหน้า">←</button><button class="arr r" id="nx" aria-label="ถัดไป">→</button>`:''}
     </div>
     <div class="cap"><b id="cn"></b><span id="cr"></span><a href="#/history">ทำความรู้จัก ↓</a>${S.length>1?`<div class="dots">${S.map(()=>'<i></i>').join('')}</div>`:''}</div>
-  </div>${bump()}
+  </div>
   <section><div class="wrap center"><h2 class="t">${e(cfg('vision_title','วิสัยทัศน์'))}</h2><p class="lead">${e(cfg('vision'))}</p><a class="btn" href="#/history">ประวัติแกนนำ</a></div></section>
   <section style="padding-top:20px"><div class="wrap"><h2 class="t">นโยบายพรรค</h2>${bigP?'':`<div class="grid3${D.policies.length?' pol-g':''}">${pol.map(policyCard).join('')||'<div class="empty">ยังไม่มีนโยบาย</div>'}</div>`}</div>${D.policies.length?`<div class="cs${bigP?'':' mob'}">${slides(D.policies.map(polLink))}</div>`:''}<div class="wrap center" style="margin-top:40px"><a class="btn" href="#/policies">ดูนโยบายทั้งหมด</a></div></section>
   ${D.why.length?`<section class="alt"><div class="wrap"><h2 class="t">${e(cfg('why_title','ทำไมต้องคอนนิวเตอร์'))}</h2>${D.why.length>3?`<div class="cs cs-why">${slides(D.why.map(whyCard))}</div>`:`<div class="grid3">${D.why.map(whyCard).join('')}</div>`}</div></section>`:''}
