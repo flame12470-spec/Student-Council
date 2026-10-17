@@ -220,26 +220,12 @@ footer small{display:block;opacity:.85;font-size:clamp(12px,2vw,15px)}
 @media(prefers-reduced-motion:reduce){.rows{overflow-x:auto}}
 .pno{position:absolute;top:14px;right:16px;z-index:3;width:68px;height:68px;border-radius:50%;background:#fff;color:var(--navy);display:grid;place-content:center;text-align:center;line-height:1;font-weight:700;box-shadow:0 6px 18px rgba(0,0,0,.2)}.pno small{font-size:11px}.pno b{font-size:26px}
 .lpic{position:absolute;left:3%;bottom:0;height:min(72%,380px);max-width:34%;z-index:2;object-fit:contain;object-position:left bottom;pointer-events:none}
-/* ภาพที่บันทึกไว้ให้เต็มพื้นหลังแบนเนอร์ แล้วค่อยวางชั้นไล่สีฟุ้งทับ */
-.hero .lpic{position:absolute;inset:0;width:100%;height:100%;max-width:none;object-fit:cover;object-position:center;z-index:0;opacity:.88;bottom:0}
-.hero::before{content:"";position:absolute;inset:0;z-index:1;pointer-events:none;background:linear-gradient(180deg,rgba(18,49,143,.82) 0%,rgba(29,79,216,.72) 45%,rgba(77,179,245,.48) 78%,rgba(255,255,255,.18) 100%)}
-.hero h1{z-index:2}
-.hero .stage{z-index:2}
-.hero .fuzz{z-index:3}
-.hero .cap{z-index:4}
-.hero .pno{z-index:5}
-.fuzz{--fade:clamp(70px,9vw,130px);position:absolute;left:0;right:0;bottom:0;height:calc(var(--fade) * 1.25);z-index:1;pointer-events:none;background:linear-gradient(180deg,transparent 0,color-mix(in srgb,var(--sky) 55%,transparent) 35%,color-mix(in srgb,var(--sky) 45%,#fff) 70%,#fff 100%)}
+.hero .lpic{bottom:calc(var(--fade) * .55)}
+.fuzz{--fade:clamp(70px,9vw,130px);position:absolute;left:0;right:0;bottom:0;height:calc(var(--fade) * 1.9);z-index:1;pointer-events:none;background:linear-gradient(180deg,transparent 0,color-mix(in srgb,var(--sky) 94%,transparent) 45%,color-mix(in srgb,var(--sky) 45%,#fff) 78%,#fff 100%)}
+.phero:has(.fuzz){padding-bottom:calc(clamp(48px,9vw,90px) + clamp(50px,7vw,100px))}
 .hero.nofade .cap{background:none}
 .bump{position:relative;z-index:3;margin-top:-44px;text-align:center;pointer-events:none}.bump img{display:block;margin:0 auto;max-width:100%;max-height:140px;object-fit:contain}
 @media(max-width:700px){.phero .lpic{display:none}.hero .lpic{height:34%;max-width:40%}}
-/* FINAL OVERRIDE: ภาพพื้นหลังเต็มแบนเนอร์ทุกขนาดหน้าจอ */
-.hero .lpic,.phero .lpic{display:block;inset:0;left:0;bottom:0;width:100%;height:100%;max-width:none;object-fit:cover;object-position:center;z-index:0;opacity:.88}
-.hero::before{content:"";position:absolute;inset:0;z-index:1;pointer-events:none;background:linear-gradient(180deg,rgba(18,49,143,.82) 0%,rgba(29,79,216,.72) 45%,rgba(77,179,245,.48) 78%,rgba(255,255,255,.18) 100%)}
-.hero h1,.hero .stage{z-index:2}
-.hero .fuzz,.phero .fuzz{z-index:1}
-.hero .cap{z-index:4}
-.phero::before{z-index:1}
-.phero>*:not(.lpic):not(.fuzz){z-index:2}
 </style>
 </head>
 <body>
