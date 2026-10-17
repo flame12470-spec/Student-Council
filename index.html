@@ -84,7 +84,7 @@ h2.t{margin:0 0 clamp(24px,5vw,44px);text-align:center;font-size:clamp(23px,4vw,
 .rows{overflow:hidden;display:grid;gap:22px;padding:6px 0 14px}
 .track{display:flex;width:max-content;animation:mv var(--d,30s) linear infinite;will-change:transform}
 .track .mem{margin-right:22px}
-.rows:hover .track{animation-play-state:paused}
+@media(hover:hover) and (pointer:fine){.rows:hover .track{animation-play-state:paused}}
 .track.rev{animation-direction:reverse}
 @keyframes mv{to{transform:translateX(-50%)}}
 .mgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,150px),1fr));gap:clamp(12px,2vw,22px)}
@@ -487,17 +487,17 @@ function heroSlider(){
   els.forEach((el,i)=>el.onclick=()=>{if(!moved&&i!==cur)go(i);});
   dots.forEach((d,i)=>d.onclick=()=>{go(i);start();});
   if($('nx')){$('nx').onclick=()=>{go(cur+1);start();};$('pv').onclick=()=>{go(cur-1);start();};}
-  st.onpointerdown=ev=>{drag=ev.clientX;moved=false;stop();};
+  st.onpointerdown=ev=>{drag=ev.clientX;moved=false;};
   st.onpointermove=ev=>{if(drag!==null&&Math.abs(ev.clientX-drag)>10)moved=true;};
   const up=ev=>{if(drag===null)return;const dx=ev.clientX-drag;drag=null;if(Math.abs(dx)>45)go(cur+(dx<0?1:-1));start();};
   st.onpointerup=up;st.onpointercancel=up;st.onpointerleave=up;
 }
 /* แถบสมาชิกวิ่งวน: ทำสำเนาให้ยาวพอ แล้ววิ่งเร็วขึ้นตามจำนวนการ์ด */
-function marquee(arr,rev){
+function marquee(arr,rev,idx=0){
   if(!arr.length)return '';
   let b=arr.slice();while(b.length<8)b=b.concat(arr);
-  const d=Math.max(14,b.length*1.7);
-  return `<div class="track ${rev?'rev':''}" style="--d:${d}s">${b.concat(b).map(memCard).join('')}</div>`;
+  const base=Math.max(14,b.length*1.7),k=[1,1.22,.86,1.38,.94,1.15][idx%6],d=+(base*k*(.94+Math.random()*.12)).toFixed(1),dl=-(Math.random()*d).toFixed(1);
+  return `<div class="track ${rev?'rev':''}" style="--d:${d}s;animation-delay:${dl}s">${b.concat(b).map(memCard).join('')}</div>`;
 }
 function countdown(){
   const raw=cfg('countdown'),t=new Date(raw).getTime(),ok=!!raw&&!isNaN(t);
@@ -534,7 +534,7 @@ function pHome(){
   <section><div class="wrap center"><h2 class="t">${e(cfg('vision_title','วิสัยทัศน์'))}</h2><p class="lead">${e(cfg('vision'))}</p><a class="btn" href="#/history">ประวัติแกนนำ</a></div></section>
   <section style="padding-top:20px"><div class="wrap"><h2 class="t">นโยบายพรรค</h2>${bigP?'':`<div class="grid3${D.policies.length?' pol-g':''}">${pol.map(policyCard).join('')||'<div class="empty">ยังไม่มีนโยบาย</div>'}</div>`}</div>${D.policies.length?`<div class="cs${bigP?'':' mob'}">${slides(D.policies.map(polLink))}</div>`:''}<div class="wrap center" style="margin-top:40px"><a class="btn" href="#/policies">ดูนโยบายทั้งหมด</a></div></section>
   ${D.why.length?`<section class="alt"><div class="wrap"><h2 class="t">${e(cfg('why_title','ทำไมต้องคอนนิวเตอร์'))}</h2>${D.why.length>3?`<div class="cs cs-why">${slides(D.why.map(whyCard))}</div>`:`<div class="grid3">${D.why.map(whyCard).join('')}</div>`}</div></section>`:''}
-  <section><div class="wrap"><h2 class="t">สมาชิกพรรค</h2></div><div class="rows">${mrows.map(r=>marquee(r,false)).join('')}</div></section>
+  <section><div class="wrap"><h2 class="t">สมาชิกพรรค</h2></div><div class="rows">${mrows.map((r,i)=>marquee(r,false,i)).join('')}</div></section>
   <section class="cd"><div class="wrap"><h2>${e(cfg('cd_title','นับถอยหลังวันเลือกตั้ง'))}</h2><p id="cdmsg">${e(cfg('countdown')?cfg('cd_sub'):'ยังไม่ได้ตั้งวันเลือกตั้ง')}</p><div class="cdw" id="cdw"></div>${cfg('cd_image')?`<div class="cdimg">${img(cfg('cd_image'),'')}</div>`:''}</div></section>`;
   bindCards();heroSlider();initSliders();countdown();
 }
